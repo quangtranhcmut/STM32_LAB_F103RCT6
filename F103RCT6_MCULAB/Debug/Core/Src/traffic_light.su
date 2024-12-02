@@ -1,0 +1,15 @@
+../Core/Src/traffic_light.c:14:6:trafficGreenRed	8	static
+../Core/Src/traffic_light.c:22:6:trafficYellowRed	8	static
+../Core/Src/traffic_light.c:30:6:trafficRedGreen	8	static
+../Core/Src/traffic_light.c:38:6:trafficRedYellow	8	static
+../Core/Src/traffic_light.c:47:6:updateRedTime	4	static
+../Core/Src/traffic_light.c:53:6:updateGreenTime	4	static
+../Core/Src/traffic_light.c:59:6:updateYellowTime	4	static
+../Core/Src/traffic_light.c:66:6:setRedTime	16	static
+../Core/Src/traffic_light.c:69:6:setYellowTime	16	static
+../Core/Src/traffic_light.c:72:6:setGreenTime	16	static
+../Core/Src/traffic_light.c:76:6:clearTrafficLight	8	static
+../Core/Src/traffic_light.c:85:6:blinkRedLed	8	static
+../Core/Src/traffic_light.c:93:6:blinkYellowLed	8	static
+../Core/Src/traffic_light.c:101:6:blinkGreenLed	8	static
+../Core/Src/traffic_light.c:110:6:blinkAllLed	8	static

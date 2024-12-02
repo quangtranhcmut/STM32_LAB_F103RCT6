@@ -97,8 +97,8 @@ void display7SEG(int num){
     }
 }
 
-const int MAX_LED = 4;
-int index_led = 0;
+//const int MAX_LED = 4;
+//int index_led = 0;
 int led_buffer[4] = {1, 2, 3, 4};
 void update7SEG(int index) {
     switch (index) {
@@ -136,30 +136,11 @@ void update7SEG(int index) {
     }
 }
 
-void init_exercise3(){
-	HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, 0);
-	resetAllDigits();
-	update7SEG(index_led);
-	setTimer(1, 100);
-	setTimer(2, 50);
+void updateBufferXLine(int value) {
+	led_buffer[0] = (value / 10) % 10;
+	led_buffer[1]= value % 10;
 }
-void exercise3_run(){
-	if (timer_flag[1] == 1){
-		setTimer(1, 100);
-		HAL_GPIO_TogglePin(LED1_GPIO_Port, LED1_Pin);
-	}
-	if (timer_flag[2] == 1){
-		setTimer(2, 50);
-		update7SEG(index_led++);
-		if (index_led > MAX_LED) {
-			index_led = 0;
-		}
-	}
-}
-
-void updateClockBuffer(int hour, int minute) {
-	led_buffer[0] = hour / 10;
-	led_buffer[1] = hour % 10;
-	led_buffer[2] = minute / 10;
-	led_buffer[3] = minute % 10;
+void updateBufferYLine(int value) {
+	led_buffer[2] = (value / 10) % 10;
+	led_buffer[3]= value % 10;
 }
