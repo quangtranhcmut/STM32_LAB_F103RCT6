@@ -1,3 +1,0 @@
-../Core/Src/matrix.c:11:6:resetAllColumns	1
-../Core/Src/matrix.c:25:6:updateLEDMatrix	9
-../Core/Src/matrix.c:75:6:shiftLeft	1

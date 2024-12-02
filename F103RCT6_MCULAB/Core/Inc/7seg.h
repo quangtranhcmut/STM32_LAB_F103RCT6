@@ -16,5 +16,7 @@ void setNum2Digit(int a, int b, int c, int d, int e, int f, int g);
 void display7SEG(int num);
 void update7SEG(int index);
 void updateClockBuffer(int hour, int minute);
-
+void updateBufferXLine(int value);
+void updateBufferYLine(int value);
+void autoUpdate7Seg();
 #endif /* INC_7SEG_H_ */

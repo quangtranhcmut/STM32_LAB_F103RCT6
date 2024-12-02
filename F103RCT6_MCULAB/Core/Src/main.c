@@ -24,6 +24,12 @@
 #include "timer.h"
 #include "7seg.h"
 #include "matrix.h"
+#include "button.h"
+#include "traffic_light.h"
+#include "global.h"
+#include "automatic.h"
+#include "manual.h"
+#include "scheduler.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -92,11 +98,16 @@ int main(void)
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
   HAL_TIM_Base_Start_IT(&htim2);
-  resetAllColumns();
-  setTimer(0, 0);
-  setTimer(1, 0);
-  int idx_col = 0;
-  int shiftCounter = 0;
+  SCH_Add_Task(initButtons, 	100, 0);
+//  SCH_Add_Task(timerRun, 		100, 1);
+  SCH_Add_Task(getKeyInput, 	100, 1);
+  SCH_Add_Task(autoUpdate7Seg, 	100, 5);
+  SCH_Add_Task(blinkDot, 		100, 1000);
+  SCH_Add_Task(fsm_automatic, 	100, 1);
+  SCH_Add_Task(fsm_manual, 		100, 1);
+  SCH_Add_Task(fsm_setting, 	100, 1);
+//  initButtons(); //Init for button_array
+//  setTimer(4, 1000);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -106,22 +117,14 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  if (timer_flag[0] == 1) {
-		  setTimer(0, 2);
-		  updateLEDMatrix(idx_col);
-		  idx_col++;
-		  if (idx_col >= 8) {
-			  idx_col = 0;
-		  }
-	  }
-	  if (timer_flag[1] == 1) {
-		  setTimer(1,100);
-		  shiftCounter++;
-		  if (shiftCounter > 10) {
-			  shiftLeft();
-			  shiftCounter = 0;
-		  }
-	  }
+//	  fsm_automatic();
+//	  fsm_manual();
+//	  fsm_setting();
+//	  if (timer_flag[4] == 1) {
+//		  setTimer(4, 1000);
+//		  HAL_GPIO_TogglePin(LED7_GPIO_Port, LED7_Pin);
+//	  }
+	  SCH_Dispatch_Tasks();
   }
   /* USER CODE END 3 */
 }
@@ -181,9 +184,9 @@ static void MX_TIM2_Init(void)
 
   /* USER CODE END TIM2_Init 1 */
   htim2.Instance = TIM2;
-  htim2.Init.Prescaler = 999;
+  htim2.Init.Prescaler = 799;
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim2.Init.Period = 7;
+  htim2.Init.Period = 9;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
@@ -224,54 +227,48 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, ROW5_Pin|ROW6_Pin|ROW7_Pin|LED1_Pin
-                          |LED2_Pin|LED3_Pin|LED4_Pin|LED5_Pin
-                          |LED6_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, LED1_Pin|LED2_Pin|LED3_Pin|LED4_Pin
+                          |LED5_Pin|LED6_Pin|LED7_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, SEG2_Pin|ROW0_Pin|EN0_Pin|EN1_Pin
-                          |EN2_Pin|EN3_Pin|ROW1_Pin|ROW2_Pin
-                          |ROW3_Pin|ROW4_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, SEG2_Pin|EN0_Pin|EN1_Pin|EN2_Pin
+                          |EN3_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, SEG0_Pin|SEG1_Pin|ENM2_Pin|ENM3_Pin
-                          |ENM4_Pin|ENM5_Pin|ENM6_Pin|ENM7_Pin
-                          |SEG3_Pin|SEG4_Pin|SEG5_Pin|SEG6_Pin
-                          |ENM0_Pin|ENM1_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, SEG0_Pin|SEG1_Pin|SEG3_Pin|SEG4_Pin
+                          |SEG5_Pin|SEG6_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : ROW5_Pin ROW6_Pin ROW7_Pin LED1_Pin
-                           LED2_Pin LED3_Pin LED4_Pin LED5_Pin
-                           LED6_Pin */
-  GPIO_InitStruct.Pin = ROW5_Pin|ROW6_Pin|ROW7_Pin|LED1_Pin
-                          |LED2_Pin|LED3_Pin|LED4_Pin|LED5_Pin
-                          |LED6_Pin;
+  /*Configure GPIO pins : LED1_Pin LED2_Pin LED3_Pin LED4_Pin
+                           LED5_Pin LED6_Pin LED7_Pin */
+  GPIO_InitStruct.Pin = LED1_Pin|LED2_Pin|LED3_Pin|LED4_Pin
+                          |LED5_Pin|LED6_Pin|LED7_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : SEG2_Pin ROW0_Pin EN0_Pin EN1_Pin
-                           EN2_Pin EN3_Pin ROW1_Pin ROW2_Pin
-                           ROW3_Pin ROW4_Pin */
-  GPIO_InitStruct.Pin = SEG2_Pin|ROW0_Pin|EN0_Pin|EN1_Pin
-                          |EN2_Pin|EN3_Pin|ROW1_Pin|ROW2_Pin
-                          |ROW3_Pin|ROW4_Pin;
+  /*Configure GPIO pins : SEG2_Pin EN0_Pin EN1_Pin EN2_Pin
+                           EN3_Pin */
+  GPIO_InitStruct.Pin = SEG2_Pin|EN0_Pin|EN1_Pin|EN2_Pin
+                          |EN3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : SEG0_Pin SEG1_Pin ENM2_Pin ENM3_Pin
-                           ENM4_Pin ENM5_Pin ENM6_Pin ENM7_Pin
-                           SEG3_Pin SEG4_Pin SEG5_Pin SEG6_Pin
-                           ENM0_Pin ENM1_Pin */
-  GPIO_InitStruct.Pin = SEG0_Pin|SEG1_Pin|ENM2_Pin|ENM3_Pin
-                          |ENM4_Pin|ENM5_Pin|ENM6_Pin|ENM7_Pin
-                          |SEG3_Pin|SEG4_Pin|SEG5_Pin|SEG6_Pin
-                          |ENM0_Pin|ENM1_Pin;
+  /*Configure GPIO pins : SEG0_Pin SEG1_Pin SEG3_Pin SEG4_Pin
+                           SEG5_Pin SEG6_Pin */
+  GPIO_InitStruct.Pin = SEG0_Pin|SEG1_Pin|SEG3_Pin|SEG4_Pin
+                          |SEG5_Pin|SEG6_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : BTN3_Pin BTN1_Pin BTN2_Pin */
+  GPIO_InitStruct.Pin = BTN3_Pin|BTN1_Pin|BTN2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
@@ -279,8 +276,12 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+	SCH_Update();
 	timerRun();
+//	getKeyInput();
+//	autoUpdate7Seg();
 }
 /* USER CODE END 4 */
 
