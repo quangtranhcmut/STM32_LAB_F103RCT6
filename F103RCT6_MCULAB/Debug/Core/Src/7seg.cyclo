@@ -1,0 +1,8 @@
+../Core/Src/7seg.c:10:6:resetAllDigits	1
+../Core/Src/7seg.c:17:6:setDigit	5
+../Core/Src/7seg.c:42:6:setNum2Digit	1
+../Core/Src/7seg.c:52:6:display7SEG	11
+../Core/Src/7seg.c:103:6:update7SEG	5
+../Core/Src/7seg.c:139:6:init_exercise3	1
+../Core/Src/7seg.c:146:6:exercise3_run	4
+../Core/Src/7seg.c:160:6:updateClockBuffer	1
