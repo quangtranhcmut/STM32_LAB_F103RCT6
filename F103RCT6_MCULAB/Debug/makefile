@@ -63,8 +63,8 @@ all: main-build
 main-build: RCT6_lab2.elf secondary-outputs
 
 # Tool invocations
-RCT6_lab2.elf RCT6_lab2.map: $(OBJS) $(USER_OBJS) D:\Downloads\GIT\STM32F103RCT6_LAB2\RCT6_lab2\STM32F103RCTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
-	arm-none-eabi-gcc -o "RCT6_lab2.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"D:\Downloads\GIT\STM32F103RCT6_LAB2\RCT6_lab2\STM32F103RCTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="RCT6_lab2.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+RCT6_lab2.elf RCT6_lab2.map: $(OBJS) $(USER_OBJS) D:\Downloads\GIT_STM32_F103RCT6\F103RCT6_MCULAB\STM32F103RCTX_FLASH.ld makefile objects.list $(OPTIONAL_TOOL_DEPS)
+	arm-none-eabi-gcc -o "RCT6_lab2.elf" @"objects.list" $(USER_OBJS) $(LIBS) -mcpu=cortex-m3 -T"D:\Downloads\GIT_STM32_F103RCT6\F103RCT6_MCULAB\STM32F103RCTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="RCT6_lab2.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
 	@echo 'Finished building target: $@'
 	@echo ' '
 

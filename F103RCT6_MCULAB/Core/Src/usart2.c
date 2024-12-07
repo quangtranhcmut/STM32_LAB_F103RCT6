@@ -10,60 +10,47 @@
 uint8_t temp = 0;
 uint8_t buffer[MAX_BUFFER_SIZE];
 uint8_t index_buffer = 0;
+uint8_t current_index_buffer = 0;
 uint8_t buffer_flag = 0;
+uint8_t cmd_flag = 0;
+uint8_t cmd_end_flag = 0;
 
-uint8_t cmd_state = IDLE;
-
-uint8_t num_char = 0;
-uint8_t temp_char[] = "";
+uint8_t uart_state = IDLE;
+uint8_t cmd_state = CMD_INIT;
+uint8_t cmd_rts_flag = 0;
+uint8_t cmd_ok_flag = 0;
 uint32_t adc_value = 0;
-uint8_t adc_buffer[30];
+uint8_t adc_buffer[10];
+uint8_t start_index = 0;
 
 void command_parser_fsm(){
 	switch (cmd_state) {
-		case IDLE: {
-			if (buffer[index_buffer] == '!') {
-				cmd_state = CMDCHECK;
-				break;
+		case CMD_INIT: {
+			if (cmd_flag == 1) {
+				cmd_flag = 0;
+				cmd_state = CMD_FIND;
 			}
 			break;
 		}
-		case CMDCHECK: {
-			if (buffer[index_buffer] != '#') {
-				temp_char[num_char] = buffer[index_buffer];
-				num_char++;
-			}
-			if (buffer[index_buffer] == '#') {
-				if (strcmp((char *)temp_char, "RTS") == 0) {
-					cmd_state = SEND;
-					memset(temp_char, '\0', sizeof(temp_char));
-					num_char = 0;
-					break;
-				}
-				if (strcmp((char *)temp_char, "RTS") != 0) {
-					cmd_state = IDLE;
-					memset(temp_char, '\0', sizeof(temp_char));
-					num_char = 0;
-					break;
-				}
-			}
-			if (num_char > 10) {
-				cmd_state = IDLE;
-				memset(temp_char, '\0', sizeof(temp_char));
-				num_char = 0;
+		case CMD_FIND: {
+			start_index = current_index_buffer;
+			if (buffer[start_index] == '!'
+				&& buffer[start_index + 1] == 'R'
+				&& buffer[start_index + 2] == 'T'
+				&& buffer[start_index + 3] == 'S'
+				&& buffer[start_index + 4] == '#') {
+				cmd_rts_flag = 1;
+				cmd_state = CMD_INIT;
 				break;
 			}
-			break;
-		}
-		case SEND: {
-		    HAL_ADC_Start(&hadc1);
-		    if (HAL_ADC_PollForConversion(&hadc1, 100) == HAL_OK) {
-		        adc_value = HAL_ADC_GetValue(&hadc1);
-		    }
-		    HAL_ADC_Stop(&hadc1);
-//		    snprintf((uint8_t *)adc_buffer, buffer_size, "ADC=%lu", adc_value);
-			HAL_UART_Transmit(&huart2, (uint8_t *)"ABC", 3, 50);
-			memset(adc_buffer, '\0', sizeof(adc_buffer));
+			if (buffer[start_index] == '!'
+				&& buffer[start_index + 1] == 'O'
+				&& buffer[start_index + 2] == 'K'
+				&& buffer[start_index + 3] == '#') {
+				cmd_ok_flag = 1;
+				cmd_state = CMD_INIT;
+				break;
+			}
 			break;
 		}
 		default: {
@@ -71,6 +58,59 @@ void command_parser_fsm(){
 		}
 	}
 }
-void uart_communication_fsm(){
 
+void uart_communication_fsm(){
+	switch (uart_state) {
+		case IDLE: {
+			if (cmd_end_flag == 1) {
+				cmd_end_flag = 0;
+				uart_state = CMDCHECK;
+			}
+			setTimer(1, 1000);
+			break;
+		}
+		case CMDCHECK: {
+			if (cmd_rts_flag == 1) {
+				uart_state = SEND;
+				cmd_rts_flag = 0;
+				break;
+			}
+			if (cmd_ok_flag == 1){
+				uart_state = IDLE;
+				cmd_ok_flag = 0;
+				break;
+			}
+			if (timer_flag[1] == 1) {
+				uart_state = IDLE;
+			}
+			break;
+		}
+		case SEND: {
+			HAL_ADC_Start(&hadc1);
+			if (HAL_ADC_PollForConversion(&hadc1, 100) == HAL_OK) {
+				adc_value = HAL_ADC_GetValue(&hadc1);
+				sprintf((char *)adc_buffer, "!ADC=%lu#", adc_value);
+				HAL_UART_Transmit(&huart2, adc_buffer, 10, 10);
+				setTimer(0, 5000);
+	        	uart_state = WAIT;
+			}
+			HAL_ADC_Stop(&hadc1);
+			break;
+		}
+		case WAIT: {
+			if(timer_flag[0] == 1) {
+				uart_state = IDLE;
+				break;
+			}
+			if (cmd_ok_flag == 1) {
+				cmd_ok_flag = 0;
+				uart_state = IDLE;
+				break;
+			}
+			break;
+		}
+		default: {
+			break;
+		}
+	}
 }

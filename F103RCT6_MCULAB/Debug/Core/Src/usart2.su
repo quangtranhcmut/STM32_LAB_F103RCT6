@@ -1,2 +1,2 @@
-../Core/Src/usart2.c:22:6:command_parser_fsm	8	static
-../Core/Src/usart2.c:78:6:uart_communication_fsm	4	static
+../Core/Src/usart2.c:26:6:command_parser_fsm	4	static
+../Core/Src/usart2.c:62:6:uart_communication_fsm	8	static

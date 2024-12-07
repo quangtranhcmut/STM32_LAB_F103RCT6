@@ -82,10 +82,21 @@ static void MX_USART2_UART_Init(void);
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart) {
     if (huart->Instance == USART2) {
-        buffer[index_buffer++] = temp;
+    	if (temp == '!') {
+    		if (index_buffer > 24) {
+    			index_buffer = 0;
+    		}
+    		current_index_buffer = index_buffer;
+    		cmd_flag = 1;
+    	}
+        buffer[index_buffer] = temp;
+    	if (temp == '#') {
+    		cmd_end_flag = 1;
+    		index_buffer = 0;
+    	}
+        index_buffer++;
         if (index_buffer == MAX_BUFFER_SIZE) index_buffer = 0;
         buffer_flag = 1;
-//        HAL_UART_Transmit(&huart2, &temp, 1, 50);
         HAL_UART_Receive_IT(&huart2, &temp, 1);
     }
 }
@@ -164,11 +175,11 @@ int main(void)
 //	  SCH_Dispatch_Tasks();
 
 	  //LAB5
-//	    if (buffer_flag == 1) {
+	    if (buffer_flag == 1) {
 	        command_parser_fsm();
-//	        buffer_flag = 0;
-//	    }
-//	    uart_communication_fsm();
+	        buffer_flag = 0;
+	    }
+	    uart_communication_fsm();
   }
   /* USER CODE END 3 */
 }
@@ -324,7 +335,7 @@ static void MX_USART2_UART_Init(void)
 
   /* USER CODE END USART2_Init 1 */
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 9600;
+  huart2.Init.BaudRate = 115200;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
